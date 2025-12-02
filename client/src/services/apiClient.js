@@ -8,6 +8,9 @@ const apiClient = async (url, options = {}) => {
     credentials: "include",
     headers: {
       "Content-Type": "application/json",
+      ...(localStorage.getItem("authToken")
+        ? { Authorization: `Bearer ${localStorage.getItem("authToken")}` }
+        : {}),
       ...options.headers,
     },
   };

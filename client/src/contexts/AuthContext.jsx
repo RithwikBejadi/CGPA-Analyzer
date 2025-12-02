@@ -85,6 +85,10 @@ export const AuthProvider = ({ children }) => {
         throw new Error(data.error || "Login failed");
       }
 
+      if (data.token) {
+        localStorage.setItem("authToken", data.token);
+      }
+
       await checkAuth();
       return { success: true };
     } catch (error) {
@@ -103,6 +107,7 @@ export const AuthProvider = ({ children }) => {
       setUser(null);
       setIsAuthenticated(false);
       localStorage.removeItem("isAuthenticated");
+      localStorage.removeItem("authToken");
       navigate("/login");
     }
   };

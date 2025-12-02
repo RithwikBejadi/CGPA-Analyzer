@@ -116,20 +116,25 @@ export const loginUser = async (req, res) => {
     if (!checkPass) {
       return res.status(401).json({ error: "Invalid credentials" });
     }
-    
-    generateToken(res, { 
-      id: user.id.toString(), 
-      username: user.username, 
-      email: user.email 
-    }, rememberMe);
 
-    return res.json({ 
+    const token = generateToken(
+      res,
+      {
+        id: user.id.toString(),
+        username: user.username,
+        email: user.email,
+      },
+      rememberMe
+    );
+
+    return res.json({
       message: "Login successful",
+      token, // Return token for client-side storage (fallback)
       user: {
         id: user.id.toString(),
         username: user.username,
-        email: user.email
-      }
+        email: user.email,
+      },
     });
   } catch (err) {
     console.error("Login error:", err);
@@ -141,15 +146,15 @@ export const loginUser = async (req, res) => {
 
 export const logoutUser = async (req, res) => {
   try {
-    res.clearCookie('jwt', { 
-      path: '/',
+    res.clearCookie("jwt", {
+      path: "/",
       httpOnly: true,
       secure: process.env.NODE_ENV === "production",
       sameSite: process.env.NODE_ENV === "production" ? "strict" : "lax",
     });
-    return res.json({ message: 'Logged out successfully' });
+    return res.json({ message: "Logged out successfully" });
   } catch (err) {
-    console.error('Logout error:', err);
-    return res.status(500).json({ error: 'Unable to logout' });
+    console.error("Logout error:", err);
+    return res.status(500).json({ error: "Unable to logout" });
   }
 };
