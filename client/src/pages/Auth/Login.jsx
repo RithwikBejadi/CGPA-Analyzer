@@ -55,7 +55,11 @@ const Login = () => {
   };
 
   const handleSocialLogin = (provider) => {
-    if (provider === "GitHub") {
+    if (provider === "Google") {
+      window.location.href = `${
+        import.meta.env.VITE_API_URL || "https://cgpa-analyzer.onrender.com"
+      }/api/auth/google`;
+    } else if (provider === "GitHub") {
       setError("GitHub authentication is not yet configured");
     }
   };

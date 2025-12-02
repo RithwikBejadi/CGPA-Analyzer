@@ -1,33 +1,33 @@
-import React, { useState } from 'react';
-import { Link } from 'react-router-dom';
-import { motion } from 'framer-motion';
-import { FiMail, FiArrowLeft } from 'react-icons/fi';
-import Input from '../../components/ui/Input';
-import Button from '../../components/ui/Button';
+import React, { useState } from "react";
+import { Link } from "react-router-dom";
+import { motion } from "framer-motion";
+import { FiMail, FiArrowLeft } from "react-icons/fi";
+import Input from "../../components/ui/Input";
+import Button from "../../components/ui/Button";
 
 const ForgotPassword = () => {
-  const [email, setEmail] = useState('');
+  const [email, setEmail] = useState("");
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState('');
+  const [error, setError] = useState("");
   const [success, setSuccess] = useState(false);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    setError('');
+    setError("");
     setSuccess(false);
 
     if (!email) {
-      setError('Email is required');
+      setError("Email is required");
       return;
     }
 
     try {
       setLoading(true);
 
-      const response = await fetch('/api/auth/forgot-password', {
-        method: 'POST',
+      const response = await fetch("/api/auth/forgot-password", {
+        method: "POST",
         headers: {
-          'Content-Type': 'application/json',
+          "Content-Type": "application/json",
         },
         body: JSON.stringify({ email }),
       });
@@ -35,7 +35,7 @@ const ForgotPassword = () => {
       const data = await response.json();
 
       if (!response.ok) {
-        throw new Error(data.error || 'Failed to send reset code');
+        throw new Error(data.error || "Failed to send reset code");
       }
 
       setSuccess(true);
@@ -56,7 +56,9 @@ const ForgotPassword = () => {
       >
         <div className="bg-white rounded-2xl shadow-xl p-8 space-y-6">
           <div className="text-center">
-            <h1 className="text-3xl font-bold text-gray-900">Forgot Password?</h1>
+            <h1 className="text-3xl font-bold text-gray-900">
+              Forgot Password?
+            </h1>
             <p className="text-gray-500 mt-2">
               No worries! Enter your email and we'll send you a reset code
             </p>
@@ -67,13 +69,15 @@ const ForgotPassword = () => {
               <div className="bg-green-50 border border-green-200 rounded-lg p-4">
                 <p className="text-green-800 font-medium">✓ Reset code sent!</p>
                 <p className="text-green-700 text-sm mt-1">
-                  Check your email at <strong>{email}</strong> for the 6-digit code.
+                  Check your email at <strong>{email}</strong> for the 6-digit
+                  code.
                 </p>
               </div>
 
               <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
                 <p className="text-blue-800 text-sm">
-                  💡 <strong>Note:</strong> If email is not configured, check the server terminal for the code.
+                  💡 <strong>Note:</strong> If email is not configured, check
+                  the server terminal for the code.
                 </p>
               </div>
 
@@ -88,7 +92,7 @@ const ForgotPassword = () => {
               <button
                 onClick={() => {
                   setSuccess(false);
-                  setEmail('');
+                  setEmail("");
                 }}
                 className="w-full text-sm text-gray-600 hover:text-gray-900"
               >
@@ -120,7 +124,7 @@ const ForgotPassword = () => {
                 disabled={loading}
                 className="w-full"
               >
-                {loading ? 'Sending...' : 'Send Reset Code'}
+                {loading ? "Sending..." : "Send Reset Code"}
               </Button>
             </form>
           )}
