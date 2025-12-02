@@ -1,40 +1,48 @@
-import React, { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { motion } from 'framer-motion';
-import { FiMoon, FiSun, FiLock, FiTrash2, FiShield, FiMail } from 'react-icons/fi';
-import { useAuth } from '../../contexts/AuthContext';
-import Modal from '../../components/ui/Modal';
-import Input from '../../components/ui/Input';
-import Button from '../../components/ui/Button';
-import { useModal } from '../../hooks/useModal';
+import React, { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
+import { motion } from "framer-motion";
+import {
+  FiMoon,
+  FiSun,
+  FiLock,
+  FiTrash2,
+  FiShield,
+  FiMail,
+} from "react-icons/fi";
+import { useAuth } from "../../contexts/AuthContext";
+import Modal from "../../components/ui/Modal";
+import Input from "../../components/ui/Input";
+import Button from "../../components/ui/Button";
+import { useModal } from "../../hooks/useModal";
+import apiClient from "../../services/apiClient";
 
 const Settings = () => {
   const navigate = useNavigate();
   const { user, logout } = useAuth();
   const deleteModal = useModal();
   const changePasswordModal = useModal();
-  
+
   const [settings, setSettings] = useState({
-    theme: 'light',
+    theme: "light",
     emailNotifications: true,
     pushNotifications: false,
-    twoFactor: false
+    twoFactor: false,
   });
-  
+
   const [deleteLoading, setDeleteLoading] = useState(false);
-  const [deleteError, setDeleteError] = useState('');
-  const [deletePassword, setDeletePassword] = useState('');
-  
+  const [deleteError, setDeleteError] = useState("");
+  const [deletePassword, setDeletePassword] = useState("");
+
   // Change password state
   const [passwordStep, setPasswordStep] = useState(1); // 1: Enter current password, 2: Enter code + new password
   const [passwordData, setPasswordData] = useState({
-    currentPassword: '',
-    verificationCode: '',
-    newPassword: '',
-    confirmPassword: ''
+    currentPassword: "",
+    verificationCode: "",
+    newPassword: "",
+    confirmPassword: "",
   });
   const [passwordLoading, setPasswordLoading] = useState(false);
-  const [passwordError, setPasswordError] = useState('');
+  const [passwordError, setPasswordError] = useState("");
   const [passwordSuccess, setPasswordSuccess] = useState(false);
   const [codeSent, setCodeSent] = useState(false);
   const [countdown, setCountdown] = useState(0);
@@ -48,27 +56,23 @@ const Settings = () => {
   }, [countdown]);
 
   const toggleSetting = (key) => {
-    setSettings(prev => ({ ...prev, [key]: !prev[key] }));
+    setSettings((prev) => ({ ...prev, [key]: !prev[key] }));
   };
 
   const handleDeleteAccount = async () => {
     try {
       setDeleteLoading(true);
-      setDeleteError('');
-      
+      setDeleteError("");
+
       // Validate password is entered
       if (!deletePassword) {
-        setDeleteError('Please enter your password to confirm');
+        setDeleteError("Please enter your password to confirm");
         setDeleteLoading(false);
         return;
       }
-      
-      const response = await fetch('/api/users/delete-account', {
-        method: 'DELETE',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        credentials: 'include',
+
+      const response = await apiClient("/api/users/delete-account", {
+        method: "DELETE",
         body: JSON.stringify({
           password: deletePassword,
         }),
@@ -77,12 +81,12 @@ const Settings = () => {
       const data = await response.json();
 
       if (!response.ok) {
-        throw new Error(data.error || 'Failed to delete account');
+        throw new Error(data.error || "Failed to delete account");
       }
 
       // Logout and redirect to home
       await logout();
-      navigate('/');
+      navigate("/");
     } catch (error) {
       setDeleteError(error.message);
     } finally {
@@ -92,23 +96,19 @@ const Settings = () => {
 
   const handleSendVerificationCode = async (e) => {
     e.preventDefault();
-    
-    setPasswordError('');
-    
+
+    setPasswordError("");
+
     if (!passwordData.currentPassword) {
-      setPasswordError('Current password is required');
+      setPasswordError("Current password is required");
       return;
     }
-    
+
     try {
       setPasswordLoading(true);
-      
-      const response = await fetch('/api/users/request-password-change', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        credentials: 'include',
+
+      const response = await apiClient("/api/users/request-password-change", {
+        method: "POST",
         body: JSON.stringify({
           currentPassword: passwordData.currentPassword,
         }),
@@ -117,13 +117,12 @@ const Settings = () => {
       const data = await response.json();
 
       if (!response.ok) {
-        throw new Error(data.error || 'Failed to send verification code');
+        throw new Error(data.error || "Failed to send verification code");
       }
 
       setCodeSent(true);
       setPasswordStep(2);
       setCountdown(300); // 5 minutes = 300 seconds
-      
     } catch (error) {
       setPasswordError(error.message);
     } finally {
@@ -133,40 +132,40 @@ const Settings = () => {
 
   const handleChangePassword = async (e) => {
     e.preventDefault();
-    
-    setPasswordError('');
+
+    setPasswordError("");
     setPasswordSuccess(false);
-    
+
     // Validation
-    if (!passwordData.verificationCode || !passwordData.newPassword || !passwordData.confirmPassword) {
-      setPasswordError('All fields are required');
+    if (
+      !passwordData.verificationCode ||
+      !passwordData.newPassword ||
+      !passwordData.confirmPassword
+    ) {
+      setPasswordError("All fields are required");
       return;
     }
-    
+
     if (passwordData.verificationCode.length !== 6) {
-      setPasswordError('Verification code must be 6 digits');
+      setPasswordError("Verification code must be 6 digits");
       return;
     }
-    
+
     if (passwordData.newPassword.length < 6) {
-      setPasswordError('New password must be at least 6 characters long');
+      setPasswordError("New password must be at least 6 characters long");
       return;
     }
-    
+
     if (passwordData.newPassword !== passwordData.confirmPassword) {
-      setPasswordError('New passwords do not match');
+      setPasswordError("New passwords do not match");
       return;
     }
-    
+
     try {
       setPasswordLoading(true);
-      
-      const response = await fetch('/api/users/change-password-verified', {
-        method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        credentials: 'include',
+
+      const response = await apiClient("/api/users/change-password-verified", {
+        method: "PUT",
         body: JSON.stringify({
           verificationCode: passwordData.verificationCode,
           newPassword: passwordData.newPassword,
@@ -176,16 +175,15 @@ const Settings = () => {
       const data = await response.json();
 
       if (!response.ok) {
-        throw new Error(data.error || 'Failed to change password');
+        throw new Error(data.error || "Failed to change password");
       }
 
       setPasswordSuccess(true);
-      
+
       // Close modal after 1.5 seconds
       setTimeout(() => {
         handleClosePasswordModal();
       }, 1500);
-      
     } catch (error) {
       setPasswordError(error.message);
     } finally {
@@ -199,19 +197,19 @@ const Settings = () => {
     setCodeSent(false);
     setCountdown(0);
     setPasswordData({
-      currentPassword: '',
-      verificationCode: '',
-      newPassword: '',
-      confirmPassword: ''
+      currentPassword: "",
+      verificationCode: "",
+      newPassword: "",
+      confirmPassword: "",
     });
-    setPasswordError('');
+    setPasswordError("");
     setPasswordSuccess(false);
   };
 
   const formatTime = (seconds) => {
     const mins = Math.floor(seconds / 60);
     const secs = seconds % 60;
-    return `${mins}:${secs.toString().padStart(2, '0')}`;
+    return `${mins}:${secs.toString().padStart(2, "0")}`;
   };
 
   const Section = ({ title, icon, children }) => (
@@ -222,9 +220,7 @@ const Settings = () => {
         </div>
         <h2 className="text-lg font-semibold text-gray-900">{title}</h2>
       </div>
-      <div className="p-6 space-y-6">
-        {children}
-      </div>
+      <div className="p-6 space-y-6">{children}</div>
     </div>
   );
 
@@ -237,12 +233,12 @@ const Settings = () => {
       <button
         onClick={onChange}
         className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 ${
-          checked ? 'bg-blue-600' : 'bg-gray-200'
+          checked ? "bg-blue-600" : "bg-gray-200"
         }`}
       >
         <span
           className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
-            checked ? 'translate-x-6' : 'translate-x-1'
+            checked ? "translate-x-6" : "translate-x-1"
           }`}
         />
       </button>
@@ -258,32 +254,40 @@ const Settings = () => {
       >
         <div className="mb-8">
           <h1 className="text-2xl font-bold text-gray-900">Settings</h1>
-          <p className="text-gray-500 mt-1">Manage your application preferences and account settings</p>
+          <p className="text-gray-500 mt-1">
+            Manage your application preferences and account settings
+          </p>
         </div>
 
         <Section title="Appearance" icon={<FiSun className="w-5 h-5" />}>
           <div className="flex items-center justify-between">
             <div>
               <h3 className="text-sm font-medium text-gray-900">Theme</h3>
-              <p className="text-xs text-gray-500 mt-1">Select your preferred interface theme</p>
+              <p className="text-xs text-gray-500 mt-1">
+                Select your preferred interface theme
+              </p>
             </div>
             <div className="flex bg-gray-100 p-1 rounded-lg">
               <button
-                onClick={() => setSettings(prev => ({ ...prev, theme: 'light' }))}
+                onClick={() =>
+                  setSettings((prev) => ({ ...prev, theme: "light" }))
+                }
                 className={`flex items-center gap-2 px-3 py-1.5 rounded-md text-sm font-medium transition-all ${
-                  settings.theme === 'light'
-                    ? 'bg-white text-gray-900 shadow-sm'
-                    : 'text-gray-500 hover:text-gray-900'
+                  settings.theme === "light"
+                    ? "bg-white text-gray-900 shadow-sm"
+                    : "text-gray-500 hover:text-gray-900"
                 }`}
               >
                 <FiSun className="w-4 h-4" /> Light
               </button>
               <button
-                onClick={() => setSettings(prev => ({ ...prev, theme: 'dark' }))}
+                onClick={() =>
+                  setSettings((prev) => ({ ...prev, theme: "dark" }))
+                }
                 className={`flex items-center gap-2 px-3 py-1.5 rounded-md text-sm font-medium transition-all ${
-                  settings.theme === 'dark'
-                    ? 'bg-white text-gray-900 shadow-sm'
-                    : 'text-gray-500 hover:text-gray-900'
+                  settings.theme === "dark"
+                    ? "bg-white text-gray-900 shadow-sm"
+                    : "text-gray-500 hover:text-gray-900"
                 }`}
               >
                 <FiMoon className="w-4 h-4" /> Dark
@@ -292,13 +296,20 @@ const Settings = () => {
           </div>
         </Section>
 
-        <Section title="Privacy & Security" icon={<FiShield className="w-5 h-5" />}>
+        <Section
+          title="Privacy & Security"
+          icon={<FiShield className="w-5 h-5" />}
+        >
           <div className="flex items-center justify-between">
             <div>
-              <h3 className="text-sm font-medium text-gray-900">Change Password</h3>
-              <p className="text-xs text-gray-500 mt-1">Update your account password</p>
+              <h3 className="text-sm font-medium text-gray-900">
+                Change Password
+              </h3>
+              <p className="text-xs text-gray-500 mt-1">
+                Update your account password
+              </p>
             </div>
-            <button 
+            <button
               onClick={changePasswordModal.open}
               className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
             >
@@ -314,11 +325,14 @@ const Settings = () => {
                 <FiTrash2 className="w-5 h-5" />
               </div>
               <div className="flex-1">
-                <h3 className="text-sm font-bold text-red-900">Delete Account</h3>
+                <h3 className="text-sm font-bold text-red-900">
+                  Delete Account
+                </h3>
                 <p className="text-sm text-red-700 mt-1">
-                  Once you delete your account, there is no going back. Please be certain.
+                  Once you delete your account, there is no going back. Please
+                  be certain.
                 </p>
-                <button 
+                <button
                   onClick={deleteModal.open}
                   className="mt-4 px-4 py-2 bg-white border border-red-200 text-red-600 text-sm font-medium rounded-lg hover:bg-red-50 transition-colors"
                 >
@@ -342,7 +356,7 @@ const Settings = () => {
             {passwordError}
           </div>
         )}
-        
+
         {passwordSuccess && (
           <div className="bg-green-50 border border-green-200 text-green-700 px-4 py-3 rounded-lg text-sm mb-4">
             Password changed successfully!
@@ -355,7 +369,10 @@ const Settings = () => {
               <FiMail className="w-4 h-4 mt-0.5 flex-shrink-0" />
               <div>
                 <p className="font-medium">Email verification required</p>
-                <p className="text-xs mt-1">We'll send a 6-digit code to <strong>{user?.email}</strong> to verify it's really you.</p>
+                <p className="text-xs mt-1">
+                  We'll send a 6-digit code to <strong>{user?.email}</strong> to
+                  verify it's really you.
+                </p>
               </div>
             </div>
 
@@ -363,7 +380,12 @@ const Settings = () => {
               label="Current Password"
               type="password"
               value={passwordData.currentPassword}
-              onChange={(e) => setPasswordData(prev => ({ ...prev, currentPassword: e.target.value }))}
+              onChange={(e) =>
+                setPasswordData((prev) => ({
+                  ...prev,
+                  currentPassword: e.target.value,
+                }))
+              }
               placeholder="Enter your current password"
               required
               autoFocus
@@ -385,7 +407,7 @@ const Settings = () => {
                 disabled={passwordLoading}
                 className="flex-1"
               >
-                {passwordLoading ? 'Sending...' : 'Send Code'}
+                {passwordLoading ? "Sending..." : "Send Code"}
               </Button>
             </div>
           </form>
@@ -393,9 +415,13 @@ const Settings = () => {
           <form onSubmit={handleChangePassword} className="space-y-4">
             <div className="bg-green-50 border border-green-200 text-green-800 px-4 py-3 rounded-lg text-sm">
               <p className="font-medium">✓ Verification code sent!</p>
-              <p className="text-xs mt-1">Check your email at <strong>{user?.email}</strong></p>
+              <p className="text-xs mt-1">
+                Check your email at <strong>{user?.email}</strong>
+              </p>
               {countdown > 0 && (
-                <p className="text-xs mt-1">Code expires in: <strong>{formatTime(countdown)}</strong></p>
+                <p className="text-xs mt-1">
+                  Code expires in: <strong>{formatTime(countdown)}</strong>
+                </p>
               )}
             </div>
 
@@ -403,7 +429,14 @@ const Settings = () => {
               label="Verification Code"
               type="text"
               value={passwordData.verificationCode}
-              onChange={(e) => setPasswordData(prev => ({ ...prev, verificationCode: e.target.value.replace(/\D/g, '').slice(0, 6) }))}
+              onChange={(e) =>
+                setPasswordData((prev) => ({
+                  ...prev,
+                  verificationCode: e.target.value
+                    .replace(/\D/g, "")
+                    .slice(0, 6),
+                }))
+              }
               placeholder="Enter 6-digit code"
               required
               autoFocus
@@ -414,7 +447,12 @@ const Settings = () => {
               label="New Password"
               type="password"
               value={passwordData.newPassword}
-              onChange={(e) => setPasswordData(prev => ({ ...prev, newPassword: e.target.value }))}
+              onChange={(e) =>
+                setPasswordData((prev) => ({
+                  ...prev,
+                  newPassword: e.target.value,
+                }))
+              }
               placeholder="Enter new password (min 6 characters)"
               required
             />
@@ -423,7 +461,12 @@ const Settings = () => {
               label="Confirm New Password"
               type="password"
               value={passwordData.confirmPassword}
-              onChange={(e) => setPasswordData(prev => ({ ...prev, confirmPassword: e.target.value }))}
+              onChange={(e) =>
+                setPasswordData((prev) => ({
+                  ...prev,
+                  confirmPassword: e.target.value,
+                }))
+              }
               placeholder="Confirm new password"
               required
             />
@@ -435,8 +478,13 @@ const Settings = () => {
                 onClick={() => {
                   setPasswordStep(1);
                   setCodeSent(false);
-                  setPasswordData(prev => ({ ...prev, verificationCode: '', newPassword: '', confirmPassword: '' }));
-                  setPasswordError('');
+                  setPasswordData((prev) => ({
+                    ...prev,
+                    verificationCode: "",
+                    newPassword: "",
+                    confirmPassword: "",
+                  }));
+                  setPasswordError("");
                 }}
                 disabled={passwordLoading}
                 className="flex-1"
@@ -449,7 +497,7 @@ const Settings = () => {
                 disabled={passwordLoading || passwordSuccess}
                 className="flex-1"
               >
-                {passwordLoading ? 'Updating...' : 'Change Password'}
+                {passwordLoading ? "Updating..." : "Change Password"}
               </Button>
             </div>
           </form>
@@ -461,8 +509,8 @@ const Settings = () => {
         isOpen={deleteModal.isOpen}
         onClose={() => {
           deleteModal.close();
-          setDeletePassword('');
-          setDeleteError('');
+          setDeletePassword("");
+          setDeleteError("");
         }}
         title="Delete Account"
         size="md"
@@ -473,11 +521,14 @@ const Settings = () => {
               {deleteError}
             </div>
           )}
-          
+
           <div className="space-y-3">
-            <p className="text-gray-900 font-medium">Are you absolutely sure?</p>
+            <p className="text-gray-900 font-medium">
+              Are you absolutely sure?
+            </p>
             <p className="text-sm text-gray-600">
-              This action cannot be undone. This will permanently delete your account and remove all your data from our servers including:
+              This action cannot be undone. This will permanently delete your
+              account and remove all your data from our servers including:
             </p>
             <ul className="text-sm text-gray-600 list-disc list-inside space-y-1 ml-2">
               <li>All your semester records</li>
@@ -488,8 +539,12 @@ const Settings = () => {
           </div>
 
           <div className="bg-yellow-50 border border-yellow-200 p-3 rounded-lg">
-            <p className="text-sm text-yellow-800 font-medium">⚠️ Verification Required</p>
-            <p className="text-xs text-yellow-700 mt-1">Enter your password to confirm account deletion</p>
+            <p className="text-sm text-yellow-800 font-medium">
+              ⚠️ Verification Required
+            </p>
+            <p className="text-xs text-yellow-700 mt-1">
+              Enter your password to confirm account deletion
+            </p>
           </div>
 
           <Input
@@ -506,8 +561,8 @@ const Settings = () => {
             <button
               onClick={() => {
                 deleteModal.close();
-                setDeletePassword('');
-                setDeleteError('');
+                setDeletePassword("");
+                setDeleteError("");
               }}
               disabled={deleteLoading}
               className="flex-1 px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors disabled:opacity-50"
@@ -519,7 +574,7 @@ const Settings = () => {
               disabled={deleteLoading || !deletePassword}
               className="flex-1 px-4 py-2 text-sm font-medium text-white bg-red-600 rounded-lg hover:bg-red-700 transition-colors disabled:opacity-50"
             >
-              {deleteLoading ? 'Deleting...' : 'Yes, Delete My Account'}
+              {deleteLoading ? "Deleting..." : "Yes, Delete My Account"}
             </button>
           </div>
         </div>

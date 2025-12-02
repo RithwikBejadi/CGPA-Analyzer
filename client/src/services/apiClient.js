@@ -2,7 +2,6 @@ const API_BASE_URL =
   import.meta.env.VITE_API_URL || "https://cgpa-analyzer.onrender.com";
 
 const apiClient = async (url, options = {}) => {
-  // Prepend base URL if the URL is relative
   const fullUrl = url.startsWith("http") ? url : `${API_BASE_URL}${url}`;
 
   const defaultOptions = {
@@ -31,6 +30,11 @@ const apiClient = async (url, options = {}) => {
     }
     throw error;
   }
+};
+
+// Helper to get full backend URL for redirects (like Google OAuth)
+export const getBackendUrl = (path) => {
+  return `${API_BASE_URL}${path}`;
 };
 
 export default apiClient;
