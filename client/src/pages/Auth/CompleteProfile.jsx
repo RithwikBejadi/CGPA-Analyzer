@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import Logo from "../../assets/Logo.png";
+import apiClient from "../../services/apiClient";
 
 const CompleteProfile = () => {
   const [colleges, setColleges] = useState([]);
@@ -20,9 +21,8 @@ const CompleteProfile = () => {
     }
     setLoading(true);
     try {
-      const res = await fetch("/api/colleges", {
+      const res = await apiClient("/api/colleges", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ name: newCollegeName.trim() }),
       });
       const data = await res.json();
@@ -52,7 +52,7 @@ const CompleteProfile = () => {
   useEffect(() => {
     (async () => {
       try {
-        const res = await fetch("/api/colleges");
+        const res = await apiClient("/api/colleges");
         const text = await res.text();
         const data = text ? JSON.parse(text) : null;
         if (data?.colleges) setColleges(data.colleges);
@@ -71,10 +71,8 @@ const CompleteProfile = () => {
     }
     setLoading(true);
     try {
-      const res = await fetch("/api/users/me/college", {
+      const res = await apiClient("/api/users/me/college", {
         method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        credentials: "include",
         body: JSON.stringify({ collegeId: selected }),
       });
       const text = await res.text();

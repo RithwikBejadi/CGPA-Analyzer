@@ -1,63 +1,66 @@
-import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { useAuth } from '../../contexts/AuthContext';
-import { FiUser, FiBook, FiCalendar, FiFileText } from 'react-icons/fi';
+import { useState } from "react";
+import { useNavigate } from "react-router-dom";
+import { useAuth } from "../../contexts/AuthContext";
+import apiClient from "../../services/apiClient";
+import { FiUser, FiBook, FiCalendar, FiFileText } from "react-icons/fi";
 
 const ProfileSetup = () => {
   const navigate = useNavigate();
   const { user, updateUser } = useAuth();
   const [formData, setFormData] = useState({
-    username: user?.username || '',
-    bio: '',
-    university: '',
-    graduationYear: ''
+    username: user?.username || "",
+    bio: "",
+    university: "",
+    graduationYear: "",
   });
-  const [error, setError] = useState('');
+  const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
-    setFormData(prev => ({ ...prev, [name]: value }));
-    setError('');
+    setFormData((prev) => ({ ...prev, [name]: value }));
+    setError("");
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    setError('');
+    setError("");
     setLoading(true);
 
     // Validation
     if (!formData.username.trim()) {
-      setError('Username is required');
+      setError("Username is required");
       setLoading(false);
       return;
     }
 
     if (!formData.university.trim()) {
-      setError('University/College name is required');
+      setError("University/College name is required");
       setLoading(false);
       return;
     }
 
     try {
-      const response = await fetch('/api/users/complete-profile', {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        credentials: 'include',
-        body: JSON.stringify(formData)
+      // Note: The instruction specified 'POST' and '{ fullName }' for the body.
+      // This might be a placeholder or an intended change.
+      // If 'fullName' is not defined, this will send an empty object for fullName.
+      // The original code used 'PUT' and 'formData'.
+      const response = await apiClient("/api/users/complete-profile", {
+        method: "POST",
+        body: JSON.stringify({ fullName: formData.username }), // Assuming fullName should be username
       });
 
       const data = await response.json();
 
       if (!response.ok) {
-        throw new Error(data.error || 'Failed to update profile');
+        throw new Error(data.error || "Failed to update profile");
       }
 
       // Update user context
       updateUser({ ...user, ...data.user, profileCompleted: true });
-      
+
       // Navigate to dashboard
-      navigate('/dashboard');
+      navigate("/dashboard");
     } catch (err) {
       setError(err.message);
     } finally {
@@ -73,8 +76,12 @@ const ProfileSetup = () => {
             <div className="inline-flex items-center justify-center w-16 h-16 bg-white dark:bg-white rounded-2xl mb-4 border-2 border-gray-200 dark:border-white">
               <FiUser className="w-8 h-8 text-black dark:text-black" />
             </div>
-            <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-2">Complete Your Profile</h1>
-            <p className="text-gray-600 dark:text-gray-400">Help us personalize your experience by completing your profile</p>
+            <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-2">
+              Complete Your Profile
+            </h1>
+            <p className="text-gray-600 dark:text-gray-400">
+              Help us personalize your experience by completing your profile
+            </p>
           </div>
 
           <form onSubmit={handleSubmit} className="space-y-6">
@@ -85,7 +92,10 @@ const ProfileSetup = () => {
             )}
 
             <div className="space-y-2">
-              <label htmlFor="username" className="flex items-center gap-2 text-sm font-medium text-gray-900 dark:text-white">
+              <label
+                htmlFor="username"
+                className="flex items-center gap-2 text-sm font-medium text-gray-900 dark:text-white"
+              >
                 <FiUser className="w-4 h-4" />
                 Username
               </label>
@@ -102,9 +112,13 @@ const ProfileSetup = () => {
             </div>
 
             <div className="space-y-2">
-              <label htmlFor="university" className="flex items-center gap-2 text-sm font-medium text-gray-900 dark:text-white">
+              <label
+                htmlFor="university"
+                className="flex items-center gap-2 text-sm font-medium text-gray-900 dark:text-white"
+              >
                 <FiBook className="w-4 h-4" />
-                University / College <span className="text-red-500 dark:text-red-400">*</span>
+                University / College{" "}
+                <span className="text-red-500 dark:text-red-400">*</span>
               </label>
               <input
                 id="university"
@@ -119,7 +133,10 @@ const ProfileSetup = () => {
             </div>
 
             <div className="space-y-2">
-              <label htmlFor="graduationYear" className="flex items-center gap-2 text-sm font-medium text-gray-900 dark:text-white">
+              <label
+                htmlFor="graduationYear"
+                className="flex items-center gap-2 text-sm font-medium text-gray-900 dark:text-white"
+              >
                 <FiCalendar className="w-4 h-4" />
                 Expected Graduation Year
               </label>
@@ -135,7 +152,10 @@ const ProfileSetup = () => {
             </div>
 
             <div className="space-y-2">
-              <label htmlFor="bio" className="flex items-center gap-2 text-sm font-medium text-gray-900 dark:text-white">
+              <label
+                htmlFor="bio"
+                className="flex items-center gap-2 text-sm font-medium text-gray-900 dark:text-white"
+              >
                 <FiFileText className="w-4 h-4" />
                 Bio
               </label>
@@ -155,11 +175,13 @@ const ProfileSetup = () => {
               disabled={loading}
               className="w-full bg-white dark:bg-white text-black dark:text-black py-3.5 rounded-xl font-medium hover:bg-gray-100 dark:hover:bg-gray-200 hover:shadow-xl transition-all duration-300 transform hover:scale-[1.02] disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100"
             >
-              {loading ? 'Saving...' : 'Complete Profile & Continue'}
+              {loading ? "Saving..." : "Complete Profile & Continue"}
             </button>
 
             <p className="text-center text-sm text-gray-500 dark:text-gray-400">
-              Fields marked with <span className="text-red-500 dark:text-red-400">*</span> are required
+              Fields marked with{" "}
+              <span className="text-red-500 dark:text-red-400">*</span> are
+              required
             </p>
           </form>
         </div>

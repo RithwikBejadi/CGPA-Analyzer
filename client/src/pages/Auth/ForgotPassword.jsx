@@ -4,6 +4,7 @@ import { motion } from "framer-motion";
 import { FiMail, FiArrowLeft } from "react-icons/fi";
 import Input from "../../components/ui/Input";
 import Button from "../../components/ui/Button";
+import apiClient from "../../services/apiClient";
 
 const ForgotPassword = () => {
   const [email, setEmail] = useState("");
@@ -24,11 +25,8 @@ const ForgotPassword = () => {
     try {
       setLoading(true);
 
-      const response = await fetch("/api/auth/forgot-password", {
+      const response = await apiClient("/api/auth/forgot-password", {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
         body: JSON.stringify({ email }),
       });
 
