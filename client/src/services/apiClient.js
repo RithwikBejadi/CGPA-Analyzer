@@ -19,7 +19,10 @@ const apiClient = async (url, options = {}) => {
 
     if (response.status === 401) {
       localStorage.removeItem("isAuthenticated");
-      window.location.href = "/login";
+      // Prevent infinite loop: Only redirect if not already on login page
+      if (window.location.pathname !== "/login") {
+        window.location.href = "/login";
+      }
       throw new Error("Unauthorized");
     }
 
